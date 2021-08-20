@@ -49,11 +49,18 @@
 #include <QHash>
 #include <QTextCharFormat>
 
+#include <QMessageBox>
+
 #include "codeeditor.h"
 
 //![constructor]
 
 CodeEditor::CodeEditor(QWidget *parent) : QPlainTextEdit(parent)
+{
+	init();
+}
+
+void CodeEditor::init()
 {
     lineNumberArea = new LineNumberArea(this);
 
@@ -75,6 +82,9 @@ QWidget *window = new QWidget;
 
 	buttonLayout->addWidget(loadButton);
 	buttonLayout->addWidget(saveAsButton);
+
+	QShortcut *shortcut = new QShortcut(QKeySequence(tr("Ctrl+S")), this);
+	connect(shortcut, SIGNAL(activated()), this, SLOT(saveFile()));
 
 	QVBoxLayout *layout = new QVBoxLayout;
 	layout->addLayout(buttonLayout);
@@ -98,6 +108,19 @@ QWidget *window = new QWidget;
 
 	QFontMetrics metrics(font);
 	setTabStopWidth(tabStop * metrics.width(' '));
+}
+
+CodeEditor::CodeEditor(char *filename, QWidget *parent)
+{
+	init();
+
+	this->filename = QString(filename);
+	QFile file(filename);
+	if(!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+		QMessageBox::information(0, "error", file.errorString());
+		return;
+	}
+	setPlainText(file.readAll());
 }
 
 Highlighter::Highlighter(QTextDocument *parent)
@@ -207,28 +230,53 @@ void Highlighter::highlightBlock(const QString &text)
 
 void CodeEditor::loadFile()
 {
-	QString fileName = QFileDialog::getOpenFileName(this);
-	QFile file(fileName);
+	if (document()->isModified()) {
+		QMessageBox::information(0, "Content changed. Exit or save before reload.", "Warning.");
+		return;
+	}
+	document()->setModified(false);
+
+	filename = QFileDialog::getOpenFileName(this);
+	QFile file(filename);
 	if(!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
 		QMessageBox::information(0, "error", file.errorString());
 		return;
 	}
 
 	setPlainText(file.readAll());
+	setWindowTitle(filename);
 }
 
 void CodeEditor::saveAsFile()
 {
-	QString fileName = QFileDialog::getSaveFileName(this);
-	QFile file(fileName);
+	filename = QFileDialog::getSaveFileName(this);
+	QFile file(filename);
 	if(!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
 		QMessageBox::information(0, "error", file.errorString());
 		return;
 	}
 	QTextStream stream(&file);
 	stream << toPlainText();
+
+	document()->setModified(false);
 }
 
+void CodeEditor::saveFile()
+{
+	if(filename.size() == 0) {
+		saveAsFile();
+		return;
+	}
+	QFile file(filename);
+	if(!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+		QMessageBox::information(0, "error", file.errorString());
+		return;
+	}
+	QTextStream stream(&file);
+	stream << toPlainText();
+
+	document()->setModified(false);
+}
 
 //![constructor]
 
@@ -305,6 +353,17 @@ void CodeEditor::highlightCurrentLine()
     }
 
     setExtraSelections(extraSelections);
+}
+
+void CodeEditor::closeEvent(QCloseEvent *event)
+{
+	if(document()->isModified()) {
+		QMessageBox::StandardButton reply = QMessageBox::question(this, "Contents modified", "Save before exit?", QMessageBox::Yes|QMessageBox::No);
+		if(reply == QMessageBox::Yes) {
+			saveFile();
+		}
+	}
+	event->accept();
 }
 
 //![cursorPositionChanged]

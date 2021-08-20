@@ -92,12 +92,16 @@ class CodeEditor : public QPlainTextEdit
 
 public:
     CodeEditor(QWidget *parent = 0);
+	CodeEditor(char *filename, QWidget *parent = 0);
+
+	void init();
 
     void lineNumberAreaPaintEvent(QPaintEvent *event);
     int lineNumberAreaWidth();
 
 protected:
     void resizeEvent(QResizeEvent *event);
+	void closeEvent(QCloseEvent *event);
 
 private slots:
     void updateLineNumberAreaWidth(int newBlockCount);
@@ -105,9 +109,11 @@ private slots:
     void updateLineNumberArea(const QRect &, int);
 void loadFile();
 void saveAsFile();
+void saveFile();
 
 private:
     QWidget *lineNumberArea;
+	QString filename;
 };
 
 //![codeeditordefinition]

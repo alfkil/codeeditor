@@ -102,7 +102,8 @@ public:
 protected:
     void resizeEvent(QResizeEvent *event);
 	void closeEvent(QCloseEvent *event);
-
+    void insertFromMimeData(const QMimeData *source);
+    
 private slots:
     void updateLineNumberAreaWidth(int newBlockCount);
     void highlightCurrentLine();

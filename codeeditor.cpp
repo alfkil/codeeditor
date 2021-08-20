@@ -334,6 +334,23 @@ void CodeEditor::resizeEvent(QResizeEvent *e)
 
 //![resizeEvent]
 
+void CodeEditor::closeEvent(QCloseEvent *event)
+{
+	if(document()->isModified()) {
+		QMessageBox::StandardButton reply = QMessageBox::question(this, "Contents modified", "Save before exit?", QMessageBox::Yes|QMessageBox::No);
+		if(reply == QMessageBox::Yes) {
+			saveFile();
+		}
+	}
+	event->accept();
+}
+
+void CodeEditor::insertFromMimeData(const QMimeData *source)
+{
+    QTextCursor cursor = textCursor();
+    cursor.insertText(source->text());
+}
+    
 //![cursorPositionChanged]
 
 void CodeEditor::highlightCurrentLine()
@@ -355,16 +372,6 @@ void CodeEditor::highlightCurrentLine()
     setExtraSelections(extraSelections);
 }
 
-void CodeEditor::closeEvent(QCloseEvent *event)
-{
-	if(document()->isModified()) {
-		QMessageBox::StandardButton reply = QMessageBox::question(this, "Contents modified", "Save before exit?", QMessageBox::Yes|QMessageBox::No);
-		if(reply == QMessageBox::Yes) {
-			saveFile();
-		}
-	}
-	event->accept();
-}
 
 //![cursorPositionChanged]
 

@@ -52,10 +52,12 @@ int main(int argc, char **argv)
 		editor->setWindowTitle(argv[1]);
 	} else {
 		editor = new CodeEditor;
-	    editor->setWindowTitle(QObject::tr("Code Editor Example"));
+	    editor->setWindowTitle("Code Editor Example");
 	}
     editor->show();
 
-    return app.exec();
+    int result = app.exec();
+	delete editor;
+	return result;
 }
 

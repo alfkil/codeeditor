@@ -1,3 +1,6 @@
 .moc
 .obj
+.pch
 codeeditor
+*.o
+moc_*
